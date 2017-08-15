@@ -4,6 +4,7 @@ An Event Manager script for unity where you register events with Struct/Class ty
 ## Defining an event
 
 You can define an event as a struct, or a class, or any data type.
+
 `events.cs`
 ```c#
 public struct MoveEvent {
@@ -14,6 +15,7 @@ public struct MoveEvent {
 ## Register Listener To An Event
 
 Say we have a cube object that we want to move when an event is triggered. To register a listener for it, we'd do like so
+
 `Cube.cs`
 ```c#
 using System.Collections;
@@ -45,6 +47,7 @@ public class Cube : MonoBehaviour {
 
 ## Trigger Event
 And finally, to trigger the event, we just pass a new instance of the event type to the Trigger method.
+
 `GameController.cs`
 ```c#
 using System.Collections;
