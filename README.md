@@ -94,3 +94,11 @@ public class GameController : Singleton<GameController> {
     }
 }
 ```
+
+## Other Methods
+
+`GetListenersOfEvent<T>()` => `List<Delegate>` -- Get a list of all listeners for an event. Returns a new empty list if a listener was never added to the event.
+
+`RemoveEvent<T>()` => `void` -- Remove all listeners for an event, and remove the event itself from the event dictionary.
+
+`RemoveAllEvents<T>()` => `void` -- Remove all listeners for all events. Completely reset the event dictionary
