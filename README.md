@@ -101,4 +101,4 @@ public class GameController : Singleton<GameController> {
 
 `RemoveEvent<T>()` => `void` -- Remove all listeners for an event, and remove the event itself from the event dictionary.
 
-`RemoveAllEvents<T>()` => `void` -- Remove all listeners for all events. Completely reset the event dictionary
+`RemoveAllEvents()` => `void` -- Remove all listeners for all events. Completely reset the event dictionary
