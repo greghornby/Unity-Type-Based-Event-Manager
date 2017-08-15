@@ -8,7 +8,7 @@ public delegate void EventCallback<T>(T data);
 
 public class EventManager : MonoBehaviour {
 
-    class GameEvent {
+    private class GameEvent {
         public List<Delegate> listeners = new List<Delegate>();
         public void AddListener(Delegate listener) {
             listeners.Add(listener);
@@ -50,12 +50,32 @@ public class EventManager : MonoBehaviour {
         }
     }
 
+    public static List<Delegate> GetListenersOfEvent<T>() {
+        CheckSceneMatches();
+        GameEvent thisEvent = null;
+        if (eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
+            return thisEvent.listeners;
+        } else {
+            return null;
+        }
+    }
+
     public static void RemoveEventListener<T>(EventCallback<T> listener) {
         CheckSceneMatches();
         GameEvent thisEvent = null;
         if (eventDictionary.TryGetValue(typeof(T), out thisEvent)) {
             thisEvent.RemoveListener (listener);
         }
+    }
+
+    public static void RemoveEvent<T>() {
+        CheckSceneMatches();
+        eventDictionary.Remove(typeof(T));
+    }
+
+    public static void RemoveAllEvents() {
+        CheckSceneMatches();
+        eventDictionary = new Dictionary<Type, GameEvent>();
     }
 
     public static void TriggerEvent<T>(T data) {
