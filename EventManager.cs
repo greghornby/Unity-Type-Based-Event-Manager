@@ -8,74 +8,61 @@ public delegate void EventCallback<T>(T data);
 
 public class EventManager : MonoBehaviour {
 
-    private Dictionary <Type, CustomEvent> eventDictionary;
-
-    private static EventManager eventManager;
-
-    public static EventManager instance {
-        get {
-            if (!eventManager) {
-                eventManager = FindObjectOfType (typeof (EventManager)) as EventManager;
-                if (!eventManager) {
-                    Debug.LogError ("There needs to be one active EventManger script on a GameObject in your scene.");
-                } else {
-                    eventManager.Init (); 
-                }
+    class GameEvent {
+        public List<Delegate> listeners = new List<Delegate>();
+        public void AddListener(Delegate listener) {
+            listeners.Add(listener);
+        }
+        public void RemoveListener(Delegate listener) {
+            listeners.Remove(listener);
+        }
+        public void Invoke <T>(T data) {
+            foreach (var listener in listeners) {
+                listener.DynamicInvoke(data);
             }
-            return eventManager;
         }
     }
 
-    void Init () {
-        if (eventDictionary == null) {
-            eventDictionary = new Dictionary<Type, CustomEvent>();
+    private static Dictionary <Type, GameEvent> eventDictionary = new Dictionary<Type, GameEvent>();
+    private static string eventSceneName;
+
+    void Start() {
+        eventSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        eventDictionary = new Dictionary<Type, GameEvent>();
+    }
+
+    private static void CheckSceneMatches() {
+        string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (currentSceneName != eventSceneName) {
+            throw new Exception("EventManager has not been initialized for the current scene");
         }
     }
 
-    public static void StartListening <T> (EventCallback<T> listener) {
-        CustomEvent thisEvent = null;
-        if (instance.eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
+    public static void AddEventListener<T>(EventCallback<T> listener) {
+        CheckSceneMatches();
+        GameEvent thisEvent = null;
+        if (eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
             thisEvent.AddListener(listener);
         } else {
-            thisEvent = new CustomEvent ();
+            thisEvent = new GameEvent ();
             thisEvent.AddListener(listener);
-            instance.eventDictionary.Add (typeof(T), thisEvent);
+            eventDictionary.Add (typeof(T), thisEvent);
         }
     }
 
-    public static void StopListening  <T> (EventCallback<T> listener) {
-        if (eventManager == null) {
-            return;
-        }
-        CustomEvent thisEvent = null;
-        if (instance.eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
+    public static void RemoveEventListener<T>(EventCallback<T> listener) {
+        CheckSceneMatches();
+        GameEvent thisEvent = null;
+        if (eventDictionary.TryGetValue(typeof(T), out thisEvent)) {
             thisEvent.RemoveListener (listener);
         }
     }
 
-    public static void TriggerEvent <T> (T data) {
-        CustomEvent thisEvent = null;
-        if (instance.eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
+    public static void TriggerEvent<T>(T data) {
+        CheckSceneMatches();
+        GameEvent thisEvent = null;
+        if (eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
             thisEvent.Invoke (data);
-        }
-    }
-}
-
-public class CustomEvent {
-
-    public List<Delegate> listeners = new List<Delegate>();
-
-    public void AddListener (Delegate listener) {
-        listeners.Add(listener);
-    }
-
-    public void RemoveListener(Delegate listener) {
-        listeners.Remove(listener);
-    }
-    
-    public void Invoke <T>(T data) {
-        foreach (var listener in listeners) {
-            listener.DynamicInvoke(data);
         }
     }
 }
