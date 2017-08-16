@@ -8,27 +8,12 @@ public delegate void EventCallback<T>(T data);
 
 public class EventManager : MonoBehaviour {
 
-    private class GameEvent {
-        public List<Delegate> listeners = new List<Delegate>();
-        public void AddListener(Delegate listener) {
-            listeners.Add(listener);
-        }
-        public void RemoveListener(Delegate listener) {
-            listeners.Remove(listener);
-        }
-        public void Invoke <T>(T data) {
-            foreach (var listener in listeners) {
-                listener.DynamicInvoke(data);
-            }
-        }
-    }
-
-    private static Dictionary <Type, GameEvent> eventDictionary = new Dictionary<Type, GameEvent>();
+    private static Dictionary <Type, List<Delegate>> eventDictionary = new Dictionary<Type, List<Delegate>>();
     private static string eventSceneName;
 
-    void Start() {
+    void Awake() {
         eventSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        eventDictionary = new Dictionary<Type, GameEvent>();
+        eventDictionary = new Dictionary<Type, List<Delegate>>();
     }
 
     private static void CheckSceneMatches() {
@@ -40,21 +25,23 @@ public class EventManager : MonoBehaviour {
 
     public static void AddEventListener<T>(EventCallback<T> listener) {
         CheckSceneMatches();
-        GameEvent thisEvent = null;
-        if (eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
-            thisEvent.AddListener(listener);
+        List<Delegate> listeners = null;
+        if (eventDictionary.TryGetValue (typeof(T), out listeners)) {
+            if (!listeners.Contains(listener)) {
+                listeners.Add(listener);
+            }
         } else {
-            thisEvent = new GameEvent ();
-            thisEvent.AddListener(listener);
-            eventDictionary.Add (typeof(T), thisEvent);
+            listeners = new List<Delegate>();
+            listeners.Add(listener);
+            eventDictionary.Add(typeof(T), listeners);
         }
     }
 
     public static List<Delegate> GetListenersOfEvent<T>() {
         CheckSceneMatches();
-        GameEvent thisEvent = null;
-        if (eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
-            return thisEvent.listeners;
+        List<Delegate> listeners = null;
+        if (eventDictionary.TryGetValue (typeof(T), out listeners)) {
+            return listeners;
         } else {
             return null;
         }
@@ -62,9 +49,9 @@ public class EventManager : MonoBehaviour {
 
     public static void RemoveEventListener<T>(EventCallback<T> listener) {
         CheckSceneMatches();
-        GameEvent thisEvent = null;
-        if (eventDictionary.TryGetValue(typeof(T), out thisEvent)) {
-            thisEvent.RemoveListener (listener);
+        List<Delegate> listeners = null;
+        if (eventDictionary.TryGetValue(typeof(T), out listeners)) {
+            listeners.Remove(listener);
         }
     }
 
@@ -75,14 +62,16 @@ public class EventManager : MonoBehaviour {
 
     public static void RemoveAllEvents() {
         CheckSceneMatches();
-        eventDictionary = new Dictionary<Type, GameEvent>();
+        eventDictionary = new Dictionary<Type, List<Delegate>>();
     }
 
     public static void TriggerEvent<T>(T data) {
         CheckSceneMatches();
-        GameEvent thisEvent = null;
-        if (eventDictionary.TryGetValue (typeof(T), out thisEvent)) {
-            thisEvent.Invoke (data);
+        List<Delegate> listeners = null;
+        if (eventDictionary.TryGetValue (typeof(T), out listeners)) {
+            foreach (var listener in listeners) {
+                listener.DynamicInvoke(data);
+            }
         }
     }
 }
