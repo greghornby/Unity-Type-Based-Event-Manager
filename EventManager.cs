@@ -69,7 +69,7 @@ public class EventManager : MonoBehaviour {
         CheckSceneMatches();
         List<Delegate> listeners = null;
         if (eventDictionary.TryGetValue (typeof(T), out listeners)) {
-            foreach (var listener in listeners) {
+            foreach (var listener in listeners.ToArray()) {
                 listener.DynamicInvoke(data);
             }
         }
